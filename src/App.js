@@ -13,22 +13,37 @@ const getRandomCoordinates = () => {
 
 }
 
+const initialState = {
+  food : getRandomCoordinates(),
+  speed: 200,
+  direction : "RIGHT",
+  snakeDots : [
+    [0, 0],
+    [2,0]
+  ]
+}
 
 class App extends Component{ 
-
-  state = {
-    food : getRandomCoordinates(),
-    speed: 200,
-    direction : "RIGHT",
-    snakeDots : [
-      [0, 0],
-      [2,0]
-    ]
-  }
-componentDidMount(){
-  setInterval(this.moveSnake, this.state.speed);
-  document.onkeydown = this.onKeyDown
+constructor(props){ 
+  super ()
+  this.state = initialState
 }
+  
+speed() {
+  clearInterval(this.interval);
+  this.interval = setInterval(this.moveSnake, this.state.speed);
+}
+componentDidMount() {
+  this.speed();
+  document.onkeydown = this.onKeyDown;
+}
+componentDidUpdate() {
+  this.checkIfOutOfBorders();
+  this.checkIfCollapsed();
+  this.checkIfEat();
+  this.speed();
+}
+
 
 onKeyDown = (e) => {
   e = e  || window.event;
@@ -74,6 +89,63 @@ moveSnake = () => {
     snakeDots : dots
   })
 
+}
+
+checkIfOutOfBorders(){
+  let head =this.state.snakeDots[this.state.snakeDots.length -1]
+  if (head[0]>=100 || head[1] >=100 || head[0] < 0 || head [1] <0 ){
+    this.onGameOver();
+
+  }
+}
+
+checkIfCollapsed(){
+  let snake = [...this.state.snakeDots]
+  let head = snake[snake.length-1]
+  snake.pop()
+  snake.forEach(dot => {
+    if (head[0] == dot[0] && head[1] == dot[1]) {
+      this.onGameOver()
+    }
+  })
+
+}
+
+
+checkIfEat(){
+  let head =this.state.snakeDots[this.state.snakeDots.length -1]
+  let food = this.state.food
+  if (head[0] == food[0] && head[1] ===food[1]){
+    this.setState({
+      food : getRandomCoordinates()
+    })
+    this.enlargeSnake()
+    this.increaseSpeed()
+  }
+
+
+}
+
+
+enlargeSnake(){
+  let newSnake = [...this.state.snakeDots]
+  newSnake.unshift([])
+  this.setState({
+    snakeDots : newSnake
+  })
+}
+
+increaseSpeed(){ 
+  if (this.state.speed >10){
+    this.setState({
+      speed : this.state.speed - 10
+    })
+  }
+}
+
+onGameOver(){
+  alert(`Game OVer . Snake length is ${this.state.snakeDots.length}`)
+  this.setState(initialState)
 }
 
 
